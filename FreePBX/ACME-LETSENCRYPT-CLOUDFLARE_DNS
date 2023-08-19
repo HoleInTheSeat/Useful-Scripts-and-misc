@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# run certbot (checks for existing cert and renews if needed)
+certbot certonly --dns-cloudflare --dns-cloudflare-credentials ~/.secrets/cloudflare.ini -d <DOMAIN> --preferred-challenges dns-01 --non-interactive
+
+# backup old cert (honestly no reason too)
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'cp /etc/asterisk/keys/freepbx.crt /etc/asterisk/keys/freepbx.crt.old'
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'cp /etc/asterisk/keys/freepbx.pem /etc/asterisk/keys/freepbx.pem.old'
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'cp /etc/asterisk/keys/freepbx.key /etc/asterisk/keys/freepbx.key.old'
+
+# copy in new cert
+rsync -L -avz -e 'ssh -i ~/.ssh/id_rsa' /etc/letsencrypt/live/<DOMAIN>/cert.pem          <USER>@<HOST>:/etc/asterisk/keys/freepbx.crt
+rsync -L -avz -e 'ssh -i ~/.ssh/id_rsa' /etc/letsencrypt/live/<DOMAIN>/fullchain.pem     <USER>@<HOST>:/etc/asterisk/keys/freepbx.pem
+rsync -L -avz -e 'ssh -i ~/.ssh/id_rsa' /etc/letsencrypt/live/<DOMAIN>/privkey.pem       <USER>@<HOST>:/etc/asterisk/keys/freepbx.key
+
+# set permissions on new cert files
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'chown asterisk:asterisk /etc/asterisk/keys/freepbx.crt'
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'chown asterisk:asterisk /etc/asterisk/keys/freepbx.key'
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'chown asterisk:asterisk /etc/asterisk/keys/freepbx.pem'
+
+# import cert and set as default
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'fwconsole certificates --import'
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'fwconsole certificates --default=freepbx'
+
+# reload asterisks
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'fwconsole reload'
+
+# restart apache
+ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'systemctl reload httpd'
