@@ -1,5 +1,5 @@
 # Backup crontab every minute (if changes were made) by adding the following line to crontab file under root user
-( `sudo su` to change to root user then `crontab -e` to edit crontab file)
+( `sudo su` to change to root )
 
 Create Backup Directory
 ```
