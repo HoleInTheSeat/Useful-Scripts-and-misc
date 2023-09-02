@@ -7,8 +7,8 @@ certbot certonly --dns-cloudflare --dns-cloudflare-credentials /home/packetfence
 cp /usr/local/pf/conf/ssl/server.pem /usr/local/pf/conf/ssl/server--OLD.pem
 
 # copy in new cert
-cat /etc/letsencrypt/live/<DOMAIN>/fullchain.pem > /usr/local/pf/conf/ssl/server.pem
-cat /etc/letsencrypt/live/<DOMAIN>/privkey.pem >> /usr/local/pf/conf/ssl/server.pem
+cat /etc/letsencrypt/live/<DOMAIN>/fullchain.pem > /usr/local/pf/conf/ssl/server.cert
+cat /etc/letsencrypt/live/<DOMAIN>/privkey.pem >> /usr/local/pf/conf/ssl/server.cert
 
 # Restart HAPROXY
 /usr/local/pf/bin/pfcmd service haproxy-admin restart
