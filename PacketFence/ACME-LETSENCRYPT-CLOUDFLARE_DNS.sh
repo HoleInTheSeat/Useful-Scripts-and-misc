@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run certbot (checks for existing cert and renews if needed)
-certbot certonly --dns-cloudflare --dns-cloudflare-credentials /home/packetfence/.secrets/cloudflare.ini -d <Admin WebGUI Domain> -d <Portal Domain> --preferred-challenges dns-01 --non-interactive
+certbot certonly --dns-cloudflare --dns-cloudflare-credentials /home/packetfence/.secrets/cloudflare.ini -d <Admin WebGUI Domain> -d <Portal Domain> --preferred-challenges dns-01 --non-interactive --expand
 
 # backup old cert (honestly no reason too)
 cp /usr/local/pf/conf/ssl/server.pem /usr/local/pf/conf/ssl/server--OLD.pem
