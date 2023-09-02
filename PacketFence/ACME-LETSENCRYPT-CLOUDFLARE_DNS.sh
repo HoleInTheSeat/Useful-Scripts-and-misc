@@ -9,7 +9,7 @@ cp /usr/local/pf/conf/ssl/server.pem /usr/local/pf/conf/ssl/server--OLD.pem
 # copy in new cert
 mv /usr/local/pf/conf/ssl/server.crt /usr/local/pf/conf/ssl/server.crt.old
 cat /etc/letsencrypt/live/<DOMAIN>/fullchain.pem > /usr/local/pf/conf/ssl/server.cert
-cat /etc/letsencrypt/live/<DOMAIN>/privkey.pem >> /usr/local/pf/conf/ssl/server.cert
+cat /etc/letsencrypt/live/<DOMAIN>/privkey.pem >> /usr/local/pf/conf/ssl/server.key
 
 # Restart HAPROXY
 /usr/local/pf/bin/pfcmd service haproxy-admin restart
