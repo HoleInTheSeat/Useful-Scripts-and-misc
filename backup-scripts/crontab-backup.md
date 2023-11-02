@@ -15,7 +15,7 @@ Add the following to crontab by running `crontab -e`
 ```
 # backup root crontab
 * * * * * cmp --silent /var/spool/cron/crontabs/$LOGNAME /var/spool/cron/backups/$LOGNAME && exit || cp -a /var/spool/cron/backups/$LOGNAME /var/spool/cron/backups/$LOGNAME.$(date '+\%Y-\%m-\%d-\%H-\%M-\%S') && cp -a /var/spool/cron/crontabs/$LOGNAME /var/spool/cron/backups/$LOGNAME
-
+```
 Reload Cron
 ```
 sudo service cron reload
