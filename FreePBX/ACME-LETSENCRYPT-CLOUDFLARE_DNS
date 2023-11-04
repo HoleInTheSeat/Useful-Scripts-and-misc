@@ -3,20 +3,15 @@
 # run certbot (checks for existing cert and renews if needed)
 certbot certonly --dns-cloudflare --dns-cloudflare-credentials ~/.secrets/cloudflare.ini -d <DOMAIN> --preferred-challenges dns-01 --non-interactive
 
-# backup old cert (honestly no reason too)
-ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'cp /etc/asterisk/keys/freepbx.crt /etc/asterisk/keys/freepbx.crt.old'
-ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'cp /etc/asterisk/keys/freepbx.pem /etc/asterisk/keys/freepbx.pem.old'
-ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'cp /etc/asterisk/keys/freepbx.key /etc/asterisk/keys/freepbx.key.old'
-
 # copy in new cert
-rsync -L -avz -e 'ssh -i ~/.ssh/id_rsa' /etc/letsencrypt/live/<DOMAIN>/cert.pem          <USER>@<HOST>:/etc/asterisk/keys/freepbx.crt
-rsync -L -avz -e 'ssh -i ~/.ssh/id_rsa' /etc/letsencrypt/live/<DOMAIN>/fullchain.pem     <USER>@<HOST>:/etc/asterisk/keys/freepbx.pem
-rsync -L -avz -e 'ssh -i ~/.ssh/id_rsa' /etc/letsencrypt/live/<DOMAIN>/privkey.pem       <USER>@<HOST>:/etc/asterisk/keys/freepbx.key
+rsync -L -avz -e 'ssh -i /home/packetfence/.ssh/id_rsa' /etc/letsencrypt/live/freepbx.armchairsavages.net/cert.pem          root@freepbx.armchairsavages.net:/etc/httpd/pki/webserver.crt
+rsync -L -avz -e 'ssh -i /home/packetfence/.ssh/id_rsa' /etc/letsencrypt/live/freepbx.armchairsavages.net/fullchain.pem     root@freepbx.armchairsavages.net:/etc/httpd/pki/webserver.pem
+rsync -L -avz -e 'ssh -i /home/packetfence/.ssh/id_rsa' /etc/letsencrypt/live/freepbx.armchairsavages.net/privkey.pem       root@freepbx.armchairsavages.net:/etc/httpd/pki/webserver.key
 
 # set permissions on new cert files
-ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'chown asterisk:asterisk /etc/asterisk/keys/freepbx.crt'
-ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'chown asterisk:asterisk /etc/asterisk/keys/freepbx.key'
-ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'chown asterisk:asterisk /etc/asterisk/keys/freepbx.pem'
+ssh -i /home/packetfence/.ssh/id_rsa root@freepbx.armchairsavages.net 'chown asterisk:asterisk /etc/httpd/pki/webserver.crt'
+ssh -i /home/packetfence/.ssh/id_rsa root@freepbx.armchairsavages.net 'chown asterisk:asterisk /etc/httpd/pki/webserver.pem'
+ssh -i /home/packetfence/.ssh/id_rsa root@freepbx.armchairsavages.net 'chown asterisk:asterisk /etc/httpd/pki/webserver.key'
 
 # import cert and set as default
 ssh -i ~/.ssh/id_rsa <USER>@<HOST> 'fwconsole certificates --import'
