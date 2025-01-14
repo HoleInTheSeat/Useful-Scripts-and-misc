@@ -1,5 +1,5 @@
-# ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh
-## You must have your cloudflare API token somewhere on your machine and must make sure the script is pointing to it
+# [ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh](ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh)
+You must have your cloudflare API token somewhere on your machine
 
 To get started, You need to manually create the desired certificat with the CertBot before Hand with something similar to the following
 `certbot certonly --dns-cloudflare --dns-cloudflare-credentials /path/to/cloudflare.ini --dns-cloudflare-propagation-seconds 120 --email itrecords@wcr7.org --agree-tos -d packetfence.domain.com -d portal.domain.com`
