@@ -20,7 +20,11 @@ CERT_PATH="/etc/letsencrypt/live/$DOMAIN/cert.pem"
 CHAIN_PATH="/etc/letsencrypt/live/$DOMAIN/chain.pem"
 COMBINED_CERT_PATH="/usr/local/pf/conf/ssl/server.crt"
 COMBINED_CERT_FULLCHAIN_PATH="/usr/local/pf/conf/ssl/server.pem"
+RADIUS_CA="/usr/local/pf/raddb/certs/ca.pem"
+RADIUS_PRIVKEY="/usr/local/pf/raddb/certs/server.key"
+RADIUS_FULLCHAIN="/usr/local/pf/raddb/certs/server.crt"
 
+## WebGUI
 # Check if the necessary files exist
 if [ ! -f "$PRIVATE_KEY_PATH" ] || [ ! -f "$CERT_PATH" ] || [ ! -f "$CHAIN_PATH" ]; then
     echo "Error: One or more necessary files are missing for domain $DOMAIN."
@@ -56,7 +60,7 @@ fi
 echo "Private key appended to the certificate file."
 
 # Set file permissions
-chown pf:pf server.pem server.crt server.key && chmod 664 server.pem server.crt server.key
+chown pf:pf "$RSA_PRIVATE_KEY_PATH" "$COMBINED_CERT_PATH" "$COMBINED_CERT_FULLCHAIN_PATH" && chmod 664 "$RSA_PRIVATE_KEY_PATH" "$COMBINED_CERT_PATH" "$COMBINED_CERT_FULLCHAIN_PATH"
 
 # Restart the packetfence services
 /usr/local/pf/bin/pfcmd service haproxy-admin restart
@@ -65,4 +69,28 @@ if [ $? -ne 0 ]; then
     echo "Error restarting services."
     exit 1
 fi
-echo "Services restarted successfully."
+echo "WEBGUI restarted successfully."
+
+## Radius Cert
+# Copy Intermeidate CA and Privkey
+cp /etc/letsencrypt/live/$DOMAIN/chain.pem "$RADIUS_CA"
+cp /etc/letsencrypt/live/$DOMAIN/privkey.pem "$RADIUS_PRIVKEY"
+
+# Combine for server.crt
+cat "$CERT_PATH" > "$RADIUS_FULLCHAIN"
+echo"" >> "$RADIUS_FULLCHAIN"
+cat "$CHAIN_PATH" >> "$RADIUS_FULLCHAIN"
+echo"" >> "$RADIUS_FULLCHAIN"
+curl https://letsencrypt.org/certs/isrgrootx1.pem >> "$RADIUS_FULLCHAIN"
+
+# Restart radiusd
+/usr/local/pf/bin/pfcmd service radiusd restart
+if [ $? -ne 0 ]; then
+    echo "Error restarting services."
+    exit 1
+fi
+echo "Radius Auth restarted successfully."
+
+# Set permissions
+chown pf:systemd-coredump "$RADIUS_CA" "$RADIUS_PRIVKEY" && chmod 664 "$RADIUS_CA" "$RADIUS_PRIVKEY"
+chown pf:pf "$RADIUS_FULLCHAIN" && chmod 664 "$RADIUS_FULLCHAIN"
