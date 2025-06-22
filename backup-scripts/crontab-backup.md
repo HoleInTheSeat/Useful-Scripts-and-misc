@@ -8,15 +8,14 @@ mkdir /var/spool/cron/backups
 
 Create first backup
 ```
-cp /var/spool/cron/crontabs/$USER /var/spool/cron/backups/$USER
+cp /var/spool/cron/crontabs/$(whoami) /var/spool/cron/backups/$(whoami)
 ```
 
 Add the following to crontab by running `crontab -e`
 ```
 # backup root crontab
-* * * * * cmp --silent /var/spool/cron/crontabs/$LOGNAME /var/spool/cron/backups/$LOGNAME && exit || cp -a /var/spool/cron/backups/$LOGNAME /var/spool/cron/backups/$LOGNAME.$(date '+\%Y-\%m-\%d-\%H-\%M-\%S') && cp -a /var/spool/cron/crontabs/$LOGNAME /var/spool/cron/backups/$LOGNAME
+* * * * * cmp --silent /var/spool/cron/crontabs/$(whoami) /var/spool/cron/backups/$(whoami) && exit || cp -a /var/spool/cron/backups/$(whoami) /var/spool/cron/backups/$(whoami).$(date '+%Y-%m-%d-%H-%M-%S') && cp -a /var/spool/cron/crontabs/$LOGNAME /var/spool/cron/backups/$LOGNAME
 ```
-Reload Cron
 ```
 sudo service cron reload
 ```
