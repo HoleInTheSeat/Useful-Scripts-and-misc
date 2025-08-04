@@ -3,7 +3,7 @@ You must have your cloudflare API token somewhere on your machine
 
 To get started, You need to manually create the desired certificat with the CertBot before Hand with something similar to the following
 ```
-certbot certonly --dns-cloudflare --dns-cloudflare-credentials /path/to/cloudflare.ini --dns-cloudflare-propagation-seconds 120 --email <email> --agree-tos -d packetfence.domain.com -d portal.domain.com
+certbot certonly --dns-cloudflare --dns-cloudflare-credentials /path/to/cloudflare.ini --dns-cloudflare-propagation-seconds 120 --email <email> --agree-tos --key-type rsa -d packetfence.domain.com -d portal.domain.com
 ```
 where `cloudflare.ini` is a file containg your API token in the following format:
 ```
