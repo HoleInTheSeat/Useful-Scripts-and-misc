@@ -14,7 +14,7 @@ certbot renew --quiet
 sleep 120
 
 # Variables for file paths
-PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
+PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey-pkcs1.pem"
 RSA_PRIVATE_KEY_PATH="/usr/local/pf/conf/ssl/server.key"
 CERT_PATH="/etc/letsencrypt/live/$DOMAIN/cert.pem"
 CHAIN_PATH="/etc/letsencrypt/live/$DOMAIN/chain.pem"
@@ -23,6 +23,10 @@ COMBINED_CERT_FULLCHAIN_PATH="/usr/local/pf/conf/ssl/server.pem"
 RADIUS_CA="/usr/local/pf/raddb/certs/ca.pem"
 RADIUS_PRIVKEY="/usr/local/pf/raddb/certs/server.key"
 RADIUS_FULLCHAIN="/usr/local/pf/raddb/certs/server.crt"
+
+## Certbo 2.0+ convert pkcs8 to pksc1
+rm /etc/letsencrypt/live/$DOMAIN/privkey-pkcs1.pem
+openssl pkey -in /etc/letsencrypt/live/$DOMAIN/privkey.pem -out /etc/letsencrypt/live/$DOMAIN/privkey-pkcs1.pem -traditional
 
 ## WebGUI
 # Check if the necessary files exist
