@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
+
 # Check if domain name is passed as an argument
 if [ -z "$1" ]; then
     echo "Usage: $0 <domain>"
@@ -10,11 +12,11 @@ fi
 DOMAIN="$1"
 
 # Renew LetsEncrypt Certs
-certbot renew --quiet
+certbot renew
 sleep 120
 
 # Variables for file paths
-PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey-pkcs1.pem"
+PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
 RSA_PRIVATE_KEY_PATH="/usr/local/pf/conf/ssl/server.key"
 CERT_PATH="/etc/letsencrypt/live/$DOMAIN/cert.pem"
 CHAIN_PATH="/etc/letsencrypt/live/$DOMAIN/chain.pem"
@@ -24,10 +26,6 @@ RADIUS_CA="/usr/local/pf/raddb/certs/ca.pem"
 RADIUS_PRIVKEY="/usr/local/pf/raddb/certs/server.key"
 RADIUS_FULLCHAIN="/usr/local/pf/raddb/certs/server.crt"
 
-## Certbo 2.0+ convert pkcs8 to pksc1
-rm /etc/letsencrypt/live/$DOMAIN/privkey-pkcs1.pem
-openssl pkey -in /etc/letsencrypt/live/$DOMAIN/privkey.pem -out /etc/letsencrypt/live/$DOMAIN/privkey-pkcs1.pem -traditional
-
 ## WebGUI
 # Check if the necessary files exist
 if [ ! -f "$PRIVATE_KEY_PATH" ] || [ ! -f "$CERT_PATH" ] || [ ! -f "$CHAIN_PATH" ]; then
@@ -36,12 +34,12 @@ if [ ! -f "$PRIVATE_KEY_PATH" ] || [ ! -f "$CERT_PATH" ] || [ ! -f "$CHAIN_PATH"
 fi
 
 # Convert the private key to RSA format and save it to the new location
-openssl rsa -in "$PRIVATE_KEY_PATH" -out "$RSA_PRIVATE_KEY_PATH"
+openssl pkey -in "$PRIVATE_KEY_PATH" -out "$RSA_PRIVATE_KEY_PATH" -traditional
 if [ $? -ne 0 ]; then
     echo "Error converting private key to RSA format."
     exit 1
 fi
-echo "Private key converted to RSA format and saved to $RSA_PRIVATE_KEY_PATH"
+echo "Private key converted to RSA PKCS#1 format and saved to $RSA_PRIVATE_KEY_PATH"
 
 # Combine cert.pem and chain.pem into server.crt with a blank line between them
 cat "$CERT_PATH" > "$COMBINED_CERT_PATH"
