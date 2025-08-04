@@ -13,7 +13,7 @@ DOMAIN="$1"
 
 # Renew LetsEncrypt Certs
 certbot renew
-sleep 120
+sleep 10
 
 # Variables for file paths
 PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
