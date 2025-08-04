@@ -21,5 +21,5 @@ Its not recommended to use a global api key
 Ideally, you would create a cron job to run this script on a desired interval
 Something like:
 ```
-0 0 * * 0 /path/to/script
+0 0 * * 0 /path/to/script <domain>
 ```
