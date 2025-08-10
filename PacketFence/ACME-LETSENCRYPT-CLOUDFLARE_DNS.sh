@@ -52,7 +52,7 @@ fi
 echo "Certificate and chain combined into $COMBINED_CERT_PATH"
 
 # Append the RSA private key to the combined certificate file with a blank line in between
-cat "$COMBINED_CERT_PATH" > server.pem
+cat "$COMBINED_CERT_PATH" > "$COMBINED_CERT_FULLCHAIN_PATH"
 echo "" >> "$COMBINED_CERT_FULLCHAIN_PATH"
 cat "$RSA_PRIVATE_KEY_PATH" >> "$COMBINED_CERT_FULLCHAIN_PATH"
 if [ $? -ne 0 ]; then
