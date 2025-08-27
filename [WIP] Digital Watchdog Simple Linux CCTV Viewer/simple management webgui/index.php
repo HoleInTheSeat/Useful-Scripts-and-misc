@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     } elseif (isset($_POST['updateclient'])) {
         // Run update client script
-        shell_exec('sudo /home/wcr7/dwupdate/updateclient.sh >> /tmp/dwupdate.log 2>&1');
+        shell_exec('sudo /home/<USER>/dwupdate/updateclient.sh >> /tmp/dwupdate.log 2>&1');
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     }
