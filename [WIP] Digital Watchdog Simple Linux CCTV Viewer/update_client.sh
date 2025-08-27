@@ -27,7 +27,7 @@ fi
 dpkg -i dwspectrum-client-* && apt --fix-broken install -y && rm dwspectrum-client-*
 
 # Backup old autostart
-cp /etc/xdg/autostart/client-bin.desktop /home/wcr7/client-bin.desktop.bak
+cp /etc/xdg/autostart/client-bin.desktop /etc/xdg/autostart/client-bin.desktop.bak
 
 # Get current latest version dir
 dwcurver=$(ls /opt/digitalwatchdog/client/ | sort -V | tail -n 1)
