@@ -61,7 +61,7 @@
         sudo systemctl reload nginx
         nano /var/www/mgmt/index.php
         ```
-    *   Paste this in
+    *   Paste this in, making sure to change <USER> to the username of who will be running the dw client
         ```
         <?php
         // Disable caching
@@ -81,7 +81,7 @@
                 exit;
             } elseif (isset($_POST['updateclient'])) {
                 // Run update client script
-                shell_exec('sudo /home/wcr7/dwupdate/updateclient.sh >> /tmp/dwupdate.log 2>&1');
+                shell_exec('sudo /home/<USER>/dwupdate/updateclient.sh >> /tmp/dwupdate.log 2>&1');
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit;
             }
