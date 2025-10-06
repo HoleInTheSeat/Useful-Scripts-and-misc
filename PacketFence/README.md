@@ -1,7 +1,15 @@
 # [ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh](ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh)
 You must have your cloudflare API token somewhere on your machine
 
-To get started, You need to manually create the desired certificat with the CertBot before Hand with something similar to the following
+To get started, download the script to your desired directory
+```
+wget https://github.com/HoleInTheSeat/Useful-Scripts-and-misc/blob/main/PacketFence/ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh
+```
+Give the script Execute Permissions:
+```
+chmod +x ./ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh
+```
+You'll need to manually create the desired certificat with the CertBot before Hand with something similar to the following
 ```
 certbot certonly --dns-cloudflare --dns-cloudflare-credentials /path/to/cloudflare.ini --dns-cloudflare-propagation-seconds 120 --email <email> --agree-tos --key-type rsa -d packetfence.domain.com -d portal.domain.com
 ```
