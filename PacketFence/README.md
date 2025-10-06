@@ -31,3 +31,7 @@ Something like:
 ```
 0 0 * * 0 /path/to/script <domain>
 ```
+EXAMPLE:
+```
+echo "0 0 * * 0 /root/ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh packetfence.domain.com" >> /etc/cron.d/packetfence
+```
