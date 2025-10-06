@@ -3,7 +3,7 @@ You must have your cloudflare API token somewhere on your machine
 
 To get started, download the script to your desired directory
 ```
-wget https://github.com/HoleInTheSeat/Useful-Scripts-and-misc/blob/main/PacketFence/ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh
+wget https://raw.githubusercontent.com/HoleInTheSeat/Useful-Scripts-and-misc/refs/heads/main/PacketFence/ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh
 ```
 Give the script Execute Permissions:
 ```
