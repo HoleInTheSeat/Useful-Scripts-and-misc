@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ===============================================================
 # Multi-directory hash compare utility
-# Author: Deven & ChatGPT
 # ===============================================================
 
 set -euo pipefail
@@ -17,7 +16,7 @@ hash_dir() {
     local hashfile="$dir/.hashlist.txt"
 
     if [[ -f "$hashfile" ]]; then
-        echo "⚠️  Found existing hash file in $dir:"
+        echo "Found existing hash file in $dir:"
         echo "   $hashfile"
         read -rp "Use existing file? (y/n): " use_existing
         if [[ "$use_existing" =~ ^[Yy]$ ]]; then
@@ -28,7 +27,7 @@ hash_dir() {
 
     echo "🔍 Generating hash list for $dir..."
     find "$dir" -type f -exec sha256sum {} + | sed "s#${dir}/##" | sort > "$hashfile"
-    echo "✅ Saved hash list to: $hashfile"
+    echo "Saved hash list to: $hashfile"
 }
 
 # ---------- Main script ----------
@@ -39,7 +38,7 @@ declare -a dirs
 for ((i=1; i<=num_dirs; i++)); do
     dir=$(prompt "Enter full path for directory #$i: ")
     if [[ ! -d "$dir" ]]; then
-        echo "❌ Directory not found: $dir"
+        echo "Directory not found: $dir"
         exit 1
     fi
     dirs+=("$dir")
