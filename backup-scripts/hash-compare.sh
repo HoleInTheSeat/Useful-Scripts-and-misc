@@ -25,7 +25,7 @@ hash_dir() {
         fi
     fi
 
-    echo "🔍 Generating hash list for $dir..."
+    echo "Generating hash list for $dir..."
     find "$dir" -type f -exec sha256sum {} + | sed "s#${dir}/##" | sort > "$hashfile"
     echo "Saved hash list to: $hashfile"
 }
