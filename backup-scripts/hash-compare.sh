@@ -90,5 +90,5 @@ for ((i=0; i<${#dirs[@]}-1; i++)); do
 done
 
 echo
-echo "✅ All comparisons complete!"
-echo "📄 Summary saved to: $summary_file"
+echo "Comparisons complete!"
+echo "Summary saved to: $summary_file"
