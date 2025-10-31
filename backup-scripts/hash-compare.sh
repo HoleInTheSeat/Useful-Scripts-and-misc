@@ -7,7 +7,7 @@ prompt() {
     echo "$response"
 }
 
-# Directory hashing with progress counter
+# Directory hashing with progress counter (fixed with mapfile)
 hash_dir() {
     local dir="$1"
     local hashfile="$dir/.hashlist.txt"
@@ -24,13 +24,13 @@ hash_dir() {
     fi
 
     echo "Scanning $dir for files..."
-    local total_files
-    total_files=$(find "$dir" -type f -not -path "*/.zfs/*" | wc -l)
+    mapfile -d '' files < <(find "$dir" -type f -not -path "*/.zfs/*" -print0)
+    local total_files=${#files[@]}
     echo "Found $total_files files to hash."
     : > "$hashfile"
     echo 0 > "$counter_file"
 
-    find "$dir" -type f -not -path "*/.zfs/*" -print0 | while IFS= read -r -d '' file; do
+    for file in "${files[@]}"; do
         sha256sum "$file" | sed "s#^#${file} #" >> "$hashfile"
         count=$(($(cat "$counter_file") + 1))
         echo "$count" > "$counter_file"
