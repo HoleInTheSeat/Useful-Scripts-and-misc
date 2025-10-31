@@ -1,264 +1,170 @@
 #!/usr/bin/env bash
 set -euo pipefail
+IFS=$'\n\t'
 
 prompt() {
-    local msg="$1"
-    local ans
-    read -rp "$msg" ans
-    echo "$ans"
+    read -rp "$1" response
+    echo "$response"
 }
 
-hash_worker() {
-    local idx="$1"
-    local dir="$2"
+# Directory hashing function with progress counter
+hash_dir() {
+    local dir="$1"
     local hashfile="$dir/.hashlist.txt"
-    local tmpfile="$dir/.hashlist.txt.tmp"
-    local statusfile="/tmp/hash_status_${idx}.status"
+    local counter_file="$dir/.hash_counter.tmp"
 
     if [[ -f "$hashfile" ]]; then
         echo "Found existing hash file in $dir:"
         echo "   $hashfile"
-        read -rp "Use existing file? (y to reuse, anything else to regenerate): " use_existing
+        read -rp "Use existing file? (y/n): " use_existing
         if [[ "$use_existing" =~ ^[Yy]$ ]]; then
-            echo "total=0" > "$statusfile"
-            echo "done=1" >> "$statusfile"
-            echo "processed=0" >> "$statusfile"
-            echo "using_existing=1" >> "$statusfile"
-            return 0
+            touch "$counter_file"
+            return
         fi
     fi
 
-    : > "$tmpfile"
-    echo "using_existing=0" > "$statusfile"
-    echo "done=0" >> "$statusfile"
-    echo "processed=0" >> "$statusfile"
+    echo "Scanning $dir for files..."
+    local total_files
+    total_files=$(find "$dir" -type f | wc -l)
+    echo "Found $total_files files to hash."
+    : > "$hashfile"
+    echo 0 > "$counter_file"
 
-    local total
-    total=$(find "$dir" -type f -print0 | tr -cd '\0' | wc -c)
-    echo "total=$total" >> "$statusfile"
-
-    if (( total == 0 )); then
-        mv -f "$tmpfile" "$hashfile"
-        echo "done=1" > "$statusfile"
-        echo "processed=0" >> "$statusfile"
-        return 0
-    fi
-
-    local count=0
     find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
-        rel="${file#$dir/}"
-        sha256sum "$file" | awk -v p="$rel" '{print $1 "\t" p}' >> "$tmpfile"
-        count=$((count + 1))
-        echo "processed=$count" > "$statusfile"
+        sha256sum "$file" | sed "s#^#${file} #" >> "$hashfile"
+        count=$(($(cat "$counter_file") + 1))
+        echo "$count" > "$counter_file"
     done
 
-    sort -o "$tmpfile" "$tmpfile"
-    mv -f "$tmpfile" "$hashfile"
-    echo "done=1" > "$statusfile"
-    echo "processed=$count" >> "$statusfile"
+    sort -o "$hashfile" "$hashfile"
 }
 
-monitor_progress() {
-    local num="$1"
-    shift
-    local -a dirs=("$@")
-    local all_done=0
-
-    printf "\033[2J\033[H"
-    while true; do
-        all_done=1
-        printf "\033[H"
-        printf "Hashing progress:\n\n"
-
-        for ((i=0; i<num; i++)); do
-            local idx=$((i+1))
-            local dir="${dirs[i]}"
-            local statusfile="/tmp/hash_status_${idx}.status"
-            local total="?"
-            local processed="0"
-            local done="0"
-            local using_existing="0"
-
-            if [[ -f "$statusfile" ]]; then
-                while IFS='=' read -r k v; do
-                    case "$k" in
-                        total) total="$v" ;;
-                        processed) processed="$v" ;;
-                        done) done="$v" ;;
-                        using_existing) using_existing="$v" ;;
-                    esac
-                done < "$statusfile"
-            fi
-
-            if [[ "$using_existing" == "1" ]]; then
-                printf "[%d] %s : using existing .hashlist.txt\n" "$idx" "$dir"
-            else
-                printf "[%d] %s : %s / %s files\n" "$idx" "$dir" "$processed" "$total"
-            fi
-
-            if [[ "$done" != "1" ]]; then
-                all_done=0
-            fi
-        done
-
-        printf "\n"
-        if [[ "$all_done" -eq 1 ]]; then
-            break
-        fi
-        sleep 1
-    done
-    printf "All hashing workers finished.\n\n"
-}
-
-compare_hashlists() {
-    local -n dirs_ref=$1
-    local timestamp="$2"
-    local out="./hash-comparison-summary-${timestamp}.txt"
-    local tmpdir
-    tmpdir=$(mktemp -d)
-    trap 'rm -rf "$tmpdir"' RETURN
-
-    local combined="$tmpdir/combined.tsv"
-    : > "$combined"
-
-    local i=0
-    for dir in "${dirs_ref[@]}"; do
-        i=$((i+1))
-        local hf="$dir/.hashlist.txt"
-        if [[ ! -f "$hf" ]]; then
-            echo "Warning: missing hash file for directory #$i: $dir" >> "$out"
-            continue
-        fi
-        awk -v idx="$i" '{
-            hash=$1
-            $1=""
-            sub(/^\t/,"")
-            print $0 "\t" idx "\t" hash
-        }' "$hf" >> "$combined"
-    done
-
-    sort -k1,1 "$combined" -o "$combined"
-
-    {
-      echo "Hash comparison summary for ${#dirs_ref[@]} directories"
-      echo "Timestamp: $timestamp"
-      echo
-      echo "Directories:"
-      local j=0
-      for d in "${dirs_ref[@]}"; do
-          j=$((j+1))
-          echo "  [$j] $d"
-      done
-      echo
-      echo "=== Files present in only a subset of directories ==="
-    } > "$out"
-
-    awk -F '\t' -v ndirs="${#dirs_ref[@]}" '
-    {
-        path = $1
-        dir = $2
-        if (path != prev_path && NR>1) {
-            present_count=0
-            for (i in have) present_count++
-            if (present_count < ndirs) {
-                printf "%s\tpresent in dirs: ", prev_path
-                sep=""
-                for (i=1;i<=ndirs;i++) if (i in have) { printf "%s%d", sep, i; sep="," }
-                printf "\n"
-            }
-            delete have
-        }
-        prev_path=path
-        have[dir]=1
-    }
-    END {
-        present_count=0
-        for (i in have) present_count++
-        if (present_count < ndirs) {
-            printf "%s\tpresent in dirs: ", prev_path
-            sep=""
-            for (i=1;i<=ndirs;i++) if (i in have) { printf "%s%d", sep, i; sep="," }
-            printf "\n"
-        }
-    }' "$combined" >> "$out"
-
-    {
-      echo
-      echo "=== Files with same relative path but DIFFERENT HASHES ==="
-    } >> "$out"
-
-    awk -F '\t' -v ndirs="${#dirs_ref[@]}" '
-    {
-        path = $1
-        dir = $2
-        hash = $3
-        if (path != prev_path && NR>1) {
-            uniq=0
-            for (d in hash_per_dir) seen[ hash_per_dir[d] ]++
-            for (h in seen) uniq++
-            if (uniq>1) {
-                printf "%s\n", prev_path
-                for (i=1;i<=ndirs;i++) {
-                    if (i in hash_per_dir) printf "  dir[%d]: %s\n", i, hash_per_dir[i]
-                    else printf "  dir[%d]: <missing>\n", i
-                }
-                printf "\n"
-            }
-            delete hash_per_dir
-            delete seen
-        }
-        prev_path=path
-        hash_per_dir[dir]=hash
-    }
-    END {
-        uniq=0
-        for (d in hash_per_dir) seen[ hash_per_dir[d] ]++
-        for (h in seen) uniq++
-        if (uniq>1) {
-            printf "%s\n", prev_path
-            for (i=1;i<=ndirs;i++) {
-                if (i in hash_per_dir) printf "  dir[%d]: %s\n", i, hash_per_dir[i]
-                else printf "  dir[%d]: <missing>\n", i
-            }
-            printf "\n"
-        }
-    }' "$combined" >> "$out"
-
-    echo "Summary written to: $out"
-}
-
-echo "Multi-directory hash comparer"
+# Prompt for directories
+echo "===== Multi-directory Hash Comparison ====="
 num_dirs=$(prompt "Enter number of directories to compare: ")
-if ! [[ "$num_dirs" =~ ^[0-9]+$ ]] || (( num_dirs < 1 )); then
-    echo "Invalid number of directories"
-    exit 1
-fi
 
-declare -a DIRS
+declare -a dirs
 for ((i=1; i<=num_dirs; i++)); do
     dir=$(prompt "Enter full path for directory #$i: ")
     if [[ ! -d "$dir" ]]; then
         echo "Directory not found: $dir"
         exit 1
     fi
-    dir="${dir%/}"
-    DIRS+=("$dir")
+    dirs+=("$dir")
 done
 
+# Start parallel hashing
 pids=()
-for ((i=0; i<num_dirs; i++)); do
-    idx=$((i+1))
-    hash_worker "$idx" "${DIRS[i]}" &
+for dir in "${dirs[@]}"; do
+    hash_dir "$dir" &
     pids+=($!)
 done
 
-monitor_progress "$num_dirs" "${DIRS[@]}"
-
-for pid in "${pids[@]}"; do
-    wait "$pid" || true
+# Live progress monitor
+echo "Hashing in progress..."
+while :; do
+    clear
+    all_done=true
+    for dir in "${dirs[@]}"; do
+        counter_file="$dir/.hash_counter.tmp"
+        total=$(find "$dir" -type f | wc -l)
+        done_count=0
+        [[ -f "$counter_file" ]] && done_count=$(cat "$counter_file")
+        printf "%-40s : %5d / %d files\n" "$dir" "$done_count" "$total"
+        if (( done_count < total )); then
+            all_done=false
+        fi
+    done
+    $all_done && break
+    sleep 0.5
 done
 
-timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
-compare_hashlists DIRS "$timestamp"
+# Wait for all hashing jobs
+for pid in "${pids[@]}"; do
+    wait "$pid"
+done
 
-echo "Done."
+echo "Hashing completed for all directories."
+
+# Timestamped summary
+timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+summary_file="./hash-comparison-summary-${timestamp}.txt"
+echo "=== Hash Comparison Summary (${timestamp}) ===" > "$summary_file"
+
+# Read hashes
+declare -A file_hashes
+declare -A file_sizes
+declare -A file_mtimes
+
+for dir in "${dirs[@]}"; do
+    while IFS= read -r line; do
+        hash="${line%% *}"
+        fullpath="${line#* }"
+        relpath="${fullpath#$dir/}"
+        key="$dir|$relpath"
+        file_hashes["$key"]="$hash"
+        [[ -f "$fullpath" ]] && file_sizes["$key"]="$(stat -c%s "$fullpath")"
+        [[ -f "$fullpath" ]] && file_mtimes["$key"]="$(stat -c%Y "$fullpath")"
+    done < "$dir/.hashlist.txt"
+done
+
+# Collect all unique relative paths
+declare -A all_paths
+for key in "${!file_hashes[@]}"; do
+    relpath="${key#*|}"
+    all_paths["$relpath"]=1
+done
+
+# Compare files
+for relpath in "${!all_paths[@]}"; do
+    present_dirs=()
+    hashes=()
+    sizes=()
+    mtimes=()
+    for dir in "${dirs[@]}"; do
+        key="$dir|$relpath"
+        if [[ -n "${file_hashes[$key]:-}" ]]; then
+            present_dirs+=("$dir")
+            hashes+=("${file_hashes[$key]}")
+            sizes+=("${file_sizes[$key]:-0}")
+            mtimes+=("${file_mtimes[$key]:-0}")
+        fi
+    done
+
+    if (( ${#present_dirs[@]} == 1 )); then
+        echo "ONLY in ${present_dirs[0]}: ${present_dirs[0]}/$relpath" | tee -a "$summary_file"
+    elif (( $(printf '%s\n' "${hashes[@]}" | sort -u | wc -l) > 1 )); then
+        echo "DIFFERENT in multiple directories: $relpath" | tee -a "$summary_file"
+        for idx in "${!present_dirs[@]}"; do
+            dir="${present_dirs[$idx]}"
+            size="${sizes[$idx]}"
+            mtime="${mtimes[$idx]}"
+            echo "  $dir/$relpath -> size: $size bytes, mtime: $(date -d @"$mtime" '+%Y-%m-%d %H:%M:%S')" | tee -a "$summary_file"
+        done
+
+        # Suggest likely correct: largest file, break ties with newest mtime
+        max_idx=0
+        max_size=${sizes[0]}
+        max_mtime=${mtimes[0]}
+        for i in "${!sizes[@]}"; do
+            if (( sizes[i] > max_size )); then
+                max_size=${sizes[i]}
+                max_mtime=${mtimes[i]}
+                max_idx=$i
+            elif (( sizes[i] == max_size )) && (( mtimes[i] > max_mtime )); then
+                max_mtime=${mtimes[i]}
+                max_idx=$i
+            fi
+        done
+        echo "  Suggested likely correct: ${present_dirs[$max_idx]}/$relpath" | tee -a "$summary_file"
+    fi
+done
+
+# Clean up counters
+for dir in "${dirs[@]}"; do
+    rm -f "$dir/.hash_counter.tmp"
+done
+
+echo
+echo "All comparisons complete."
+echo "Summary saved to: $summary_file"
