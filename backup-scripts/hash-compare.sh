@@ -7,7 +7,7 @@ prompt() {
     echo "$response"
 }
 
-# Directory hashing function with progress counter
+# Directory hashing with progress counter
 hash_dir() {
     local dir="$1"
     local hashfile="$dir/.hashlist.txt"
@@ -25,12 +25,12 @@ hash_dir() {
 
     echo "Scanning $dir for files..."
     local total_files
-    total_files=$(find "$dir" -type f | wc -l)
+    total_files=$(find "$dir" -type f -not -path "*/.zfs/*" | wc -l)
     echo "Found $total_files files to hash."
     : > "$hashfile"
     echo 0 > "$counter_file"
 
-    find "$dir" -type f -print0 | while IFS= read -r -d '' file; do
+    find "$dir" -type f -not -path "*/.zfs/*" -print0 | while IFS= read -r -d '' file; do
         sha256sum "$file" | sed "s#^#${file} #" >> "$hashfile"
         count=$(($(cat "$counter_file") + 1))
         echo "$count" > "$counter_file"
@@ -67,7 +67,7 @@ while :; do
     all_done=true
     for dir in "${dirs[@]}"; do
         counter_file="$dir/.hash_counter.tmp"
-        total=$(find "$dir" -type f | wc -l)
+        total=$(find "$dir" -type f -not -path "*/.zfs/*" | wc -l)
         done_count=0
         [[ -f "$counter_file" ]] && done_count=$(cat "$counter_file")
         printf "%-40s : %5d / %d files\n" "$dir" "$done_count" "$total"
@@ -91,7 +91,7 @@ timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
 summary_file="./hash-comparison-summary-${timestamp}.txt"
 echo "=== Hash Comparison Summary (${timestamp}) ===" > "$summary_file"
 
-# Read hashes
+# Read hashes into associative arrays
 declare -A file_hashes
 declare -A file_sizes
 declare -A file_mtimes
@@ -100,7 +100,8 @@ for dir in "${dirs[@]}"; do
     while IFS= read -r line; do
         hash="${line%% *}"
         fullpath="${line#* }"
-        relpath="${fullpath#$dir/}"
+        # Normalize relative path
+        relpath="$(realpath --relative-to="$dir" "$fullpath")"
         key="$dir|$relpath"
         file_hashes["$key"]="$hash"
         [[ -f "$fullpath" ]] && file_sizes["$key"]="$(stat -c%s "$fullpath")"
