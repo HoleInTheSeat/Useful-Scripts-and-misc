@@ -8,8 +8,8 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-# Assign domain from argument
-DOMAIN="$1"
+# Get domain from certbot renewal
+DOMAIN="$RENEWED_DOMAINS"
 
 # Variables for file paths
 PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
