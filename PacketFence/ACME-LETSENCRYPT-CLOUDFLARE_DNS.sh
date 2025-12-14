@@ -1,12 +1,12 @@
 #!/bin/bash
 
-exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
+#exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
 
 # Check if domain name is passed as an argument
-if [ -z "$1" ]; then
-    echo "Usage: $0 <domain>"
-    exit 1
-fi
+#if [ -z "$1" ]; then
+#    echo "Usage: $0 <domain>"
+#    exit 1
+#fi
 
 # Get domain from certbot renewal
 DOMAIN="$RENEWED_DOMAINS"
