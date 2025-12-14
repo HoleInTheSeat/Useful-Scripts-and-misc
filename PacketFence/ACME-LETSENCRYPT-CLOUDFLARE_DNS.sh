@@ -1,6 +1,6 @@
 #!/bin/bash
 
-exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
+#exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
 
 # Check if domain name is passed as an argument
 #if [ -z "$1" ]; then
@@ -9,7 +9,7 @@ exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
 #fi
 
 # Get domain from certbot renewal and sleep
-DOMAIN="$RENEWED_DOMAINS"
+DOMAIN=$(echo "$RENEWED_DOMAINS" | awk '{print $1}')
 sleep 20
 
 # Variables for file paths
@@ -91,5 +91,5 @@ fi
 echo "Radius Auth restarted successfully."
 
 # Set permissions
-chown pf:systemd-coredump "$RADIUS_CA" "$RADIUS_PRIVKEY" && chmod 664 "$RADIUS_CA" "$RADIUS_PRIVKEY"
+#chown pf:systemd-coredump "$RADIUS_CA" "$RADIUS_PRIVKEY" && chmod 664 "$RADIUS_CA" "$RADIUS_PRIVKEY"
 chown pf:pf "$RADIUS_FULLCHAIN" && chmod 664 "$RADIUS_FULLCHAIN"
