@@ -29,7 +29,7 @@ Its not recommended to use a global api key
 Ideally, you would create a cron job to run this script on a desired interval
 Something like:
 ```
-0 0 * * 0 certbot renew --cert-name <certname> --deploy-hook /path/to/script
+0 0 * * 0 certbot renew --cert-name <certname> --deploy-hook "/path/to/script"
 ```
 You can get a list of certnames with
 ```
@@ -37,5 +37,5 @@ certbot certificates
 ```
 EXAMPLE:
 ```
-echo "0 0 * * 0 /root/ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh packetfence.domain.com" >> /etc/cron.d/packetfence
+echo "0 0 * * 0 certbot renew --cert-name packetfence.domain.com --deploy-hook "/root/ACME-LETSENCRYPT-CLOUDFLARE_DNS.sh" " >> /etc/cron.d/packetfence
 ```
