@@ -11,10 +11,6 @@ fi
 # Assign domain from argument
 DOMAIN="$1"
 
-# Renew LetsEncrypt Certs
-certbot renew
-sleep 10
-
 # Variables for file paths
 PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
 RSA_PRIVATE_KEY_PATH="/usr/local/pf/conf/ssl/server.key"
