@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
+exec > ~/ACME-LETSENCRYPT-CLOUDFLARE_DNS.log 2>&1
 
 # Check if domain name is passed as an argument
 #if [ -z "$1" ]; then
@@ -8,8 +8,9 @@
 #    exit 1
 #fi
 
-# Get domain from certbot renewal
+# Get domain from certbot renewal and sleep
 DOMAIN="$RENEWED_DOMAINS"
+sleep 20
 
 # Variables for file paths
 PRIVATE_KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
