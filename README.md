@@ -1,1 +1,1 @@
-# Scripts I use for Auto Renewing Certificates with ACME Certbot on various appliances.
+# Various scripts and other things I find useful.
