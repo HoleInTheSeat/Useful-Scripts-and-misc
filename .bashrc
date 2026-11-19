@@ -7,7 +7,9 @@ esac
 
 echo
 echo
-echo ===============================
+echo "================================"
+echo "       $(hostname) - $USER"
+echo "================================"
 
 # Always start in specified directory
 SESSION_DEFAULT_DIR="/root"
