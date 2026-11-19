@@ -1,3 +1,14 @@
+# Do not execute interactive commands for non-interactive shells.
+# This prevents shell output and tmux from interfering with SFTP/SCP.
+case $- in
+    *i*) ;;
+      *) return ;;
+esac
+
+echo
+echo
+echo ===============================
+
 # Always start in specified directory
 SESSION_DEFAULT_DIR="/root"
 if [ -d "$SESSION_DEFAULT_DIR" ]; then
