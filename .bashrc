@@ -7,9 +7,10 @@ esac
 
 echo
 echo
-echo "================================"
-echo "       $(hostname) - $USER"
-echo "================================"
+ho "====================================================="
+echo "                 $(hostname) - $USER"
+echo "$(lastlog -u root | awk 'NR==2 {print "Last login:", $4, $5, $6, $7, $9, "from", $3}')"
+echo "====================================================="
 
 # Always start in specified directory
 SESSION_DEFAULT_DIR="/root"
